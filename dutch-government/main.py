@@ -1,19 +1,24 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.11print
 
 
 
+from colorama import Fore, Back, Style
 import sys
 import os
 import time
 import subprocess
 import traceback
-from colorama import Fore
 import argparse
 import json
+import tqdm
+
+
+
+
 
 class ReqonTool:
-    def __init__(self):
-        self.config_data = self.load_config()
+    def __init__(self, config_file):
+        self.config_data = self.load_config(config_file)
 
 
 
@@ -26,20 +31,27 @@ class ReqonTool:
         # print('Output:',output.stdout.decode("utf-8"))
 
 
-    def load_config(self):
-        with open('config.json') as f:
-            CONFIG_DATA = json.load(f)
-        return CONFIG_DATA
+    def load_config(self, filename):
+        if os.path.isfile(filename):
+            with open(filename) as f:
+                config_data = json.load(f)
+        else:
+            print(Fore.YELLOW, 'Config file not found, refering to default config', Fore.RESET, sep='', end='')
+            for i in range(4):
+                print(Fore.YELLOW, '.', Fore.RESET, sep='', end='', flush=True)
+                time.sleep(0.7)
+            config_data = self.default_config()
+
+        return config_data
         
-    def write_config(self):
+    def default_config(self):
         config_data = \
         {   
             'Enable tools': {
                 'wilcard_subdomain': [{'subfinder' : True}, {'assetfinder' : False}, {'sublist3r' : True}, {'knockpy' : False},],
             },
         }
-        with open('config.json', 'w', encoding='utf-8') as config_file:
-            json.dump(config_data, config_file, indent=4)
+        return config_data
             
     ## Config Menu
     # !-------------------------------------------------------------------------------------------------------------------------------------------------! #
@@ -50,7 +62,7 @@ class ReqonTool:
             print('\nOptions:')
             print('    [1] Enable/Disable tools')
             print('    [2] Show Enabled tools')
-            print('    [3] Export/Import configuration')
+            print('    [3] Export configurations')
             print('    [4] Exit program')
             # Option input
             option = input('Choose an option: ')
@@ -59,7 +71,7 @@ class ReqonTool:
             elif option == '2':
                 self.show_tools()
             elif option == '3':
-                self.export_import_config()
+                self.export_config()
             elif option == '4':
                 print('Exiting program....')
                 sys.exit(0)
@@ -67,9 +79,8 @@ class ReqonTool:
     # Show enabled/disabled tools
     def show_tools(self):
         self.run_command('clear -x', False, False)
-        output = self.load_config()
         print('\nTools enabled:')
-        for tools in output['Enable tools']['wilcard_subdomain']:
+        for tools in self.config_data['Enable tools']['wilcard_subdomain']:
             if tools[list(tools.keys())[0]] == True:
                 print(Fore.GREEN, '    [-] ', list(tools.keys())[0], Fore.RESET, sep='')
             else:
@@ -79,37 +90,45 @@ class ReqonTool:
     def enable_disable_tools(self):
         while True:
             self.run_command('clear -x', False, False)
-            output = self.load_config()
-            print('Tools enabled:')
+            print('Tools Enabled or Disabled:')
             count = 1
-            for tools in output['Enable tools']['wilcard_subdomain']:
+            for tools in self.config_data['Enable tools']['wilcard_subdomain']:
                 if tools[list(tools.keys())[0]] == True:
-                    print(Fore.GREEN, f'    [{count}] ', list(tools.keys())[0], Fore.RESET, sep='')
+                    print(Fore.GREEN, f'    {count}. [+] ', list(tools.keys())[0], Fore.RESET, sep='')
                 else:
-                    print(Fore.RED, f'    [{count}] ', list(tools.keys())[0], Fore.RESET, sep='')
+                    print(Fore.RED, f'    {count}. [-] ', list(tools.keys())[0], Fore.RESET, sep='')
                 count += 1
-            print(Fore.YELLOW, '    [5] Exit program', Fore.RESET, sep='')
+            print(Fore.YELLOW, f'    {count}.     Exit program', Fore.RESET, sep='')
             
-            tool_input = input('Choose an option: ')          
-            if tool_input not in ['1', '2', '3', '4', '5']:
-                print(Fore.RED, 'You need to enter a option from 1-5', Fore.RESET, sep='')
-            elif tool_input == '5':
+            tool_input = int(input('Choose an option: '))
+            if tool_input not in list(range(1, count+1)):
+                print(Fore.RED, f'You need to enter a option from 1-{count}', Fore.RESET, sep='')
+            elif tool_input == count:
                 print('Exiting current menu....')
                 break
             else:
-                condition = 'enable' if list(self.config_data['Enable tools']['wilcard_subdomain'][int(tool_input)].values())[0] else 'disable'
-                tool = list(self.config_data['Enable tools']['wilcard_subdomain'][int(tool_input)].keys())[0]
-                validate = input(f'Are you sure you want {condition} to {tool} y/n: ')
+                condition = f'{Fore.RED}disable{Fore.RESET}' if list(self.config_data['Enable tools']['wilcard_subdomain'][int(tool_input)-1].values())[0] else f'{Fore.GREEN}enable{Fore.RESET}'
+                tool = list(self.config_data['Enable tools']['wilcard_subdomain'][int(tool_input-1)].keys())[0]
+                validate = input(f'Are you sure you want to {condition} {Fore.YELLOW}{tool}{Fore.RESET} y/n: ')
                 
                 if validate.lower() not in ['y', 'n']:
-                    print(Fore.RED, 'Invalid! ', Fore.RESET, 'Enter y or n', sep='')
+                    print(Fore.RED, 'Invalid! ', 'Enter y or n', Fore.RESET, sep='')
                     
                 elif validate.lower() == 'y':
                     condition_print = 'Enabling' if condition == 'enable' else 'Disabling'
-                    print(f'{condition_print} {tool}....')
+                    print(Fore.YELLOW, f'{condition_print} {tool}', Fore.RESET, sep='', end='', flush=True)
+                    for i in range(4):
+                        print(Fore.YELLOW, '.', Fore.RESET, sep='', end='', flush=True)
+                        time.sleep(0.4)
+                        
                 elif validate.lower() == 'n':
-                    print('skipping....')
-            time.sleep(1.5)
+                    print(Fore.YELLOW, 'Skipping', Fore.RESET, sep='', end='', flush=True)
+                    for i in range(4):
+                        print(Fore.YELLOW, '.', Fore.RESET, sep='', end='', flush=True)
+                        time.sleep(0.4)
+            time.sleep(1)
+            
+
     # !-------------------------------------------------------------------------------------------------------------------------------------------------! #
         
         
@@ -121,18 +140,75 @@ class ReqonTool:
         
         
 
-        print('\nDo you want to enable or disable a tool?')
+
 
 def main():
     start = time.time()
+    
+
+    ascii_text = f"""   ,---,                           ,----..                              
+  '  .' \                         /   /   \                             
+ /  ;    '.              ,--,    /   .     :       ,---.         ,---,  
+:  :       \           ,'_ /|   .   /   ;.  \     '   ,'\    ,-+-. /  | 
+:  |   /\   \     .--. |  | :  .   ;   /  ` ;    /   /   |  ,--.'|'   | 
+|  :  ' ;.   :  ,'_ /| :  . |  ;   |  ; \ ; |   .   ; ,. : |   |  ,"' | 
+|  |  ;/  \   \ |  ' | |  . .  |   :  | ; | '   '   | |: : |   | /  | | 
+'  :  | \  \ ,' |  | ' |  | |  .   |  ' ' ' :   '   | .; : |   | |  | | 
+|  |  '  '--'   :  | : ;  ; |  '   ;  \; /  |   |   :    | |   | |  |/  
+|  :  :         '  :  `--'   \  \   \  ',  . \   \   \  /  |   | |--'   
+|  | ,'         :  ,      .-./   ;   :      ; |   `----'   |   |/       
+`--''            `--`----'        \   \ .'`--"             '---'        
+                                   `---`"""
+    temp = ''
+    count = 0
+
+    print(ascii_text)
+    print(f"Author:   {Back.BLACK}Twan Terstappen{Back.RESET}")
+    print(f"Date:     {Back.BLACK}2024-03-28{Back.RESET}")
+    print(f"Version:  {Back.BLACK}1.0{Back.RESET}\n\n")
+    
+    time.sleep(2)
+    # for i in range(9):
+    #     time.sleep(0.3)
+
+    #     time.sleep(0.3)
+    #     if i < 5:
+    #         temp += main_print[i]
+    #     if i == 0:
+    #         print(Fore.RED, temp, flush=True)
+    #     elif i == 1:
+    #         print(Fore.YELLOW, temp, flush=True)
+    #     elif i == 2:
+    #         print(Fore.GREEN, temp, flush=True)
+    #     elif i == 3:
+    #         print(Fore.MAGENTA, temp, flush=True)
+    #     elif i == 4:
+    #         print(Fore.BLUE, temp, flush=True)
+    #     elif i == 5:
+    #         print(Fore.BLUE, temp, flush=True)
+    #     elif i == 6:
+    #         print(Fore.MAGENTA, temp, flush=True)
+    #     elif i == 7:
+    #         print(Fore.GREEN, temp, flush=True)
+    #     elif i == 8:
+    #         print(Fore.YELLOW, temp, flush=True)
+    #     elif i == 9:
+    #         print(Fore.RED, temp, flush=True)
+                
+            
+
+    
+
+    
     
     # Setting the arguments
     parser = argparse.ArgumentParser(description='Bug Bounty scanner')
     config_group = parser.add_mutually_exclusive_group(required=True)
     config_group.add_argument('-D', '--domain', dest='domainname', nargs='?', const=True, type=str, help='Domain name for scanning')
     config_group.add_argument('-F', '--file', dest='filename', nargs='?', const=True, type=str, help='File with multiple domains')
-    config_group.add_argument('-C', '--config', dest='config', action='store_true', help='Use a configuration file')
+    config_group.add_argument('-CC', '--change-config', dest='changeconfig', action='store_true', help='Change configuration')
     # parser.add_argument('-C', '--connections', dest='connections', action='store_true', help='Displaying connections in dataset, has to be json')
+    parser.add_argument('-CF', '--config-file', dest='configfile', nargs='?', const=True, type=str, help='Load config file')
     parser.add_argument('-V', '--verbose', dest='verbose', action='store_true', help='Verbose output')
     parser.add_argument('--debug', dest='debug', action='store_true', help='Debug output')
     args = parser.parse_args()
@@ -190,8 +266,11 @@ def main():
     
 
     
-    
-    analyzer = ReqonTool()
+    if args.configfile:
+        config_file = args.configfile
+    else:
+        config_file = 'config.json'
+    analyzer = ReqonTool(config_file)
     analyzer.config_menu()
         
     input('Press enter to exit')
