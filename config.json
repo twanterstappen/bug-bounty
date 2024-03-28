@@ -1,0 +1,18 @@
+{
+    "Enable tools": {
+        "wilcard_subdomain": [
+            {
+                "subfinder": true
+            },
+            {
+                "assetfinder": false
+            },
+            {
+                "sublist3r": true
+            },
+            {
+                "knockpy": false
+            }
+        ]
+    }
+}
