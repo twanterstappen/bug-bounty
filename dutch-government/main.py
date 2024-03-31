@@ -124,6 +124,7 @@ class ReqonTool:
                     print(Fore.RED, 'Invalid! ', 'Enter y or n', Fore.RESET, sep='')
                     
                 elif validate.lower() == 'y':
+                    self.config_data['Enable tools']['wilcard_subdomain'][int(tool_input-1)][tool] = False if self.config_data['Enable tools']['wilcard_subdomain'][int(tool_input-1)][tool] else True
                     condition_print = 'Enabling' if condition == 'enable' else 'Disabling'
                     print(Fore.YELLOW, f'{condition_print} {tool}', Fore.RESET, sep='', end='', flush=True)
                     for i in range(4):
