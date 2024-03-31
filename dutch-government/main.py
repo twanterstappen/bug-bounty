@@ -48,10 +48,19 @@ class ReqonTool:
         config_data = \
         {   
             'Enable tools': {
-                'wilcard_subdomain': [{'subfinder' : True}, {'assetfinder' : False}, {'sublist3r' : True}, {'knockpy' : False},],
+                'wilcard_subdomain': [{'subfinder' : True}, {'assetfinder' : False}, {'sublist3r' : True}, {'knockpy' : False},]
             },
         }
         return config_data
+    
+    def export_config(self):
+        with open('config.json', 'w') as f:
+            json.dump(self.config_data, f, indent=4)
+        print(Fore.GREEN, 'Config file exported', Fore.RESET, sep='', end='')
+        for i in range(4):
+            print(Fore.GREEN, '.', Fore.RESET, sep='', end='', flush=True)
+            time.sleep(0.7)
+
             
     ## Config Menu
     # !-------------------------------------------------------------------------------------------------------------------------------------------------! #
@@ -98,7 +107,7 @@ class ReqonTool:
                 else:
                     print(Fore.RED, f'    {count}. [-] ', list(tools.keys())[0], Fore.RESET, sep='')
                 count += 1
-            print(Fore.YELLOW, f'    {count}.     Exit program', Fore.RESET, sep='')
+            print(Fore.YELLOW, f'    {count}.     Exit to menu', Fore.RESET, sep='')
             
             tool_input = int(input('Choose an option: '))
             if tool_input not in list(range(1, count+1)):
@@ -146,7 +155,8 @@ def main():
     start = time.time()
     
 
-    ascii_text = f"""   ,---,                           ,----..                              
+    ascii_text = f"""   
+   ,---,                           ,----..                              
   '  .' \                         /   /   \                             
  /  ;    '.              ,--,    /   .     :       ,---.         ,---,  
 :  :       \           ,'_ /|   .   /   ;.  \     '   ,'\    ,-+-. /  | 
