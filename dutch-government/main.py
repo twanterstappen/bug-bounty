@@ -12,16 +12,12 @@ import argparse
 import json
 import tqdm
 
-
-
-
-
-class ReqonTool:
+class Config:
     def __init__(self, config_file):
         self.config_data = self.load_config(config_file)
-
-
-
+        self.auto_save = self.config_data['Auto_save']
+        
+        
     def run_command(self, command, cap_output, in_shell):
         command = command.split()
         subprocess.run(command,capture_output=cap_output,check=True,shell=in_shell)
@@ -47,6 +43,7 @@ class ReqonTool:
     def default_config(self):
         config_data = \
         {   
+            'Auto_save': True,
             'Enable tools': {
                 'wilcard_subdomain': [{'subfinder' : True}, {'assetfinder' : False}, {'sublist3r' : True}, {'knockpy' : False},]
             },
@@ -61,9 +58,25 @@ class ReqonTool:
             print(Fore.GREEN, '.', Fore.RESET, sep='', end='', flush=True)
             time.sleep(0.7)
 
+
+## Config Menu
+# !-------------------------------------------------------------------------------------------------------------------------------------------------! #
+
+
+class ConfigMenu:
+    def __init__(self, config_file):
+        self.config = Config(config_file)
+        self.config_data = self.config.config_data
+        self.auto_save = self.config.auto_save
+        
+    def run_command(self, command, cap_output, in_shell):
+        command = command.split()
+        subprocess.run(command,capture_output=cap_output,check=True,shell=in_shell)
+        # returncode = output.returncode
+        # print(returncode)
+        # use decode function to convert to string
+        # print('Output:',output.stdout.decode("utf-8"))
             
-    ## Config Menu
-    # !-------------------------------------------------------------------------------------------------------------------------------------------------! #
     # Config menu options
     def config_menu(self):
         self.run_command('clear -x', False, False)
@@ -80,7 +93,7 @@ class ReqonTool:
             elif option == '2':
                 self.show_tools()
             elif option == '3':
-                self.export_config()
+                self.config.export_config()
             elif option == '4':
                 print('Exiting program....')
                 sys.exit(0)
@@ -130,6 +143,8 @@ class ReqonTool:
                     for i in range(4):
                         print(Fore.YELLOW, '.', Fore.RESET, sep='', end='', flush=True)
                         time.sleep(0.4)
+                    print('\nSaving config', sep='', flush=True)
+                    self.config.export_config()
                         
                 elif validate.lower() == 'n':
                     print(Fore.YELLOW, 'Skipping', Fore.RESET, sep='', end='', flush=True)
@@ -139,18 +154,8 @@ class ReqonTool:
             time.sleep(1)
             
 
-    # !-------------------------------------------------------------------------------------------------------------------------------------------------! #
-        
-        
-
-
-
-        
-
-        
-        
-
-
+# !-------------------------------------------------------------------------------------------------------------------------------------------------! #
+    
 
 def main():
     start = time.time()
@@ -179,32 +184,7 @@ def main():
     print(f"Version:  {Back.BLACK}1.0{Back.RESET}\n\n")
     
     time.sleep(2)
-    # for i in range(9):
-    #     time.sleep(0.3)
 
-    #     time.sleep(0.3)
-    #     if i < 5:
-    #         temp += main_print[i]
-    #     if i == 0:
-    #         print(Fore.RED, temp, flush=True)
-    #     elif i == 1:
-    #         print(Fore.YELLOW, temp, flush=True)
-    #     elif i == 2:
-    #         print(Fore.GREEN, temp, flush=True)
-    #     elif i == 3:
-    #         print(Fore.MAGENTA, temp, flush=True)
-    #     elif i == 4:
-    #         print(Fore.BLUE, temp, flush=True)
-    #     elif i == 5:
-    #         print(Fore.BLUE, temp, flush=True)
-    #     elif i == 6:
-    #         print(Fore.MAGENTA, temp, flush=True)
-    #     elif i == 7:
-    #         print(Fore.GREEN, temp, flush=True)
-    #     elif i == 8:
-    #         print(Fore.YELLOW, temp, flush=True)
-    #     elif i == 9:
-    #         print(Fore.RED, temp, flush=True)
                 
             
 
@@ -281,7 +261,7 @@ def main():
         config_file = args.configfile
     else:
         config_file = 'config.json'
-    analyzer = ReqonTool(config_file)
+    analyzer = ConfigMenu(config_file)
     analyzer.config_menu()
         
     input('Press enter to exit')
